@@ -9,6 +9,69 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      application_emails: {
+        Row: {
+          id: string
+          user_id: string
+          application_id: string | null
+          from_address: string
+          from_name: string | null
+          subject: string
+          body_preview: string | null
+          received_at: string
+          classification: Database['public']['Enums']['email_classification'] | null
+          classification_confidence: number | null
+          is_manually_classified: boolean
+          extracted_data: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          application_id?: string | null
+          from_address: string
+          from_name?: string | null
+          subject: string
+          body_preview?: string | null
+          received_at: string
+          classification?: Database['public']['Enums']['email_classification'] | null
+          classification_confidence?: number | null
+          is_manually_classified?: boolean
+          extracted_data?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          application_id?: string | null
+          from_address?: string
+          from_name?: string | null
+          subject?: string
+          body_preview?: string | null
+          received_at?: string
+          classification?: Database['public']['Enums']['email_classification'] | null
+          classification_confidence?: number | null
+          is_manually_classified?: boolean
+          extracted_data?: Json
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'application_emails_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'application_emails_application_id_fkey'
+            columns: ['application_id']
+            isOneToOne: false
+            referencedRelation: 'applications'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       applications: {
         Row: {
           id: string
@@ -127,12 +190,59 @@ export type Database = {
           }
         ]
       }
+      unmatched_emails: {
+        Row: {
+          id: string
+          user_id: string
+          email_id: string
+          suggested_application_ids: string[] | null
+          linked_application_id: string | null
+          status: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          email_id: string
+          suggested_application_ids?: string[] | null
+          linked_application_id?: string | null
+          status?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          email_id?: string
+          suggested_application_ids?: string[] | null
+          linked_application_id?: string | null
+          status?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'unmatched_emails_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'unmatched_emails_email_id_fkey'
+            columns: ['email_id']
+            isOneToOne: false
+            referencedRelation: 'application_emails'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       users: {
         Row: {
           id: string
           email: string
           name: string | null
           avatar_url: string | null
+          inbound_email_address: string | null
+          email_sync_enabled: boolean
           created_at: string
           updated_at: string
         }
@@ -141,6 +251,8 @@ export type Database = {
           email: string
           name?: string | null
           avatar_url?: string | null
+          inbound_email_address?: string | null
+          email_sync_enabled?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -149,6 +261,8 @@ export type Database = {
           email?: string
           name?: string | null
           avatar_url?: string | null
+          inbound_email_address?: string | null
+          email_sync_enabled?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -172,6 +286,14 @@ export type Database = {
         | 'REJECTED'
         | 'WITHDRAWN'
         | 'GHOSTED'
+      email_classification:
+        | 'REJECTION'
+        | 'INTERVIEW_REQUEST'
+        | 'OFFER'
+        | 'SCREENING_INVITE'
+        | 'ASSESSMENT_REQUEST'
+        | 'GENERIC_UPDATE'
+        | 'UNRELATED'
       job_type: 'internship' | 'full_time' | 'part_time' | 'contract'
       location_type: 'remote' | 'hybrid' | 'onsite'
     }
@@ -195,8 +317,12 @@ export type Enums<T extends keyof Database['public']['Enums']> =
 export type Application = Tables<'applications'>
 export type ApplicationInsert = InsertTables<'applications'>
 export type ApplicationUpdate = UpdateTables<'applications'>
+export type ApplicationEmail = Tables<'application_emails'>
+export type ApplicationEmailInsert = InsertTables<'application_emails'>
+export type UnmatchedEmail = Tables<'unmatched_emails'>
 export type User = Tables<'users'>
 export type StatusHistory = Tables<'status_history'>
 export type ApplicationStatus = Enums<'application_status'>
+export type EmailClassification = Enums<'email_classification'>
 export type JobType = Enums<'job_type'>
 export type LocationType = Enums<'location_type'>
