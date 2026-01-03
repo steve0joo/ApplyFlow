@@ -1,17 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getAuthenticatedUser } from '@/lib/api-auth'
 import type { ApplicationInsert, ApplicationStatus, JobType } from '@/types/database'
 import crypto from 'crypto'
 
 export async function GET(request: NextRequest) {
-  const supabase = await createClient()
-
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const { user, error: authError, supabase } = await getAuthenticatedUser(request)
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
   const searchParams = request.nextUrl.searchParams
+
+  // Check for duplicate by job_url_hash (used by extension)
+  const jobUrlHash = searchParams.get('job_url_hash')
+  if (jobUrlHash) {
+    const { data, error } = await supabase
+      .from('applications')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('job_url_hash', jobUrlHash)
+      .single()
+
+    if (error && error.code !== 'PGRST116') {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({
+      exists: !!data,
+      application: data || null,
+    })
+  }
+
   const status = searchParams.getAll('status') as ApplicationStatus[]
   const jobType = searchParams.getAll('jobType') as JobType[]
   const search = searchParams.get('search')
@@ -55,9 +74,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const supabase = await createClient()
-
-  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  const { user, error: authError, supabase } = await getAuthenticatedUser(request)
   if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
