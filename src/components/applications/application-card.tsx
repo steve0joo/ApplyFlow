@@ -16,9 +16,10 @@ interface ApplicationCardProps {
   application: Application
   onEdit: (application: Application) => void
   onDelete: (id: string) => void
+  onViewTimeline?: (application: Application) => void
 }
 
-export function ApplicationCard({ application, onEdit, onDelete }: ApplicationCardProps) {
+export function ApplicationCard({ application, onEdit, onDelete, onViewTimeline }: ApplicationCardProps) {
   const formatSalary = () => {
     if (!application.salary_min && !application.salary_max) return null
     const currency = application.salary_currency || 'USD'
@@ -97,6 +98,11 @@ export function ApplicationCard({ application, onEdit, onDelete }: ApplicationCa
                   <a href={application.job_url} target="_blank" rel="noopener noreferrer">
                     View Job Posting
                   </a>
+                </DropdownMenuItem>
+              )}
+              {onViewTimeline && (
+                <DropdownMenuItem onClick={() => onViewTimeline(application)}>
+                  View Timeline
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={() => onEdit(application)}>

@@ -243,6 +243,10 @@ export type Database = {
           avatar_url: string | null
           inbound_email_address: string | null
           email_sync_enabled: boolean
+          supabase_url: string | null
+          llm_provider: 'anthropic' | 'openai' | null
+          llm_api_key_encrypted: string | null
+          byoa_setup_complete: boolean
           created_at: string
           updated_at: string
         }
@@ -253,6 +257,10 @@ export type Database = {
           avatar_url?: string | null
           inbound_email_address?: string | null
           email_sync_enabled?: boolean
+          supabase_url?: string | null
+          llm_provider?: 'anthropic' | 'openai' | null
+          llm_api_key_encrypted?: string | null
+          byoa_setup_complete?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -263,6 +271,10 @@ export type Database = {
           avatar_url?: string | null
           inbound_email_address?: string | null
           email_sync_enabled?: boolean
+          supabase_url?: string | null
+          llm_provider?: 'anthropic' | 'openai' | null
+          llm_api_key_encrypted?: string | null
+          byoa_setup_complete?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -326,3 +338,33 @@ export type ApplicationStatus = Enums<'application_status'>
 export type EmailClassification = Enums<'email_classification'>
 export type JobType = Enums<'job_type'>
 export type LocationType = Enums<'location_type'>
+
+// Analysis report type (manually defined since not in generated types yet)
+export interface AnalysisReport {
+  id: string
+  user_id: string
+  date_from: string | null
+  date_to: string | null
+  job_types: JobType[] | null
+  statistics: {
+    total_applications?: number
+    response_rate?: number
+    interview_rate?: number
+    offer_rate?: number
+    avg_days_to_response?: number
+    rejection_rate?: number
+    ghosted_rate?: number
+  }
+  patterns: {
+    summary?: string
+    key_findings?: string[]
+    strengths?: string[]
+    areas_for_improvement?: string[]
+  }
+  recommendations: string[]
+  application_count: number
+  status: 'pending' | 'processing' | 'completed' | 'failed'
+  error_message: string | null
+  created_at: string
+  completed_at: string | null
+}

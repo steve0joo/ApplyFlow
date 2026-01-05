@@ -42,12 +42,14 @@ interface ApplicationFiltersProps {
   filters: Filters
   onFiltersChange: (filters: Filters) => void
   onAddNew: () => void
+  hideStatusFilter?: boolean
 }
 
 export function ApplicationFilters({
   filters,
   onFiltersChange,
   onAddNew,
+  hideStatusFilter = false,
 }: ApplicationFiltersProps) {
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -60,23 +62,25 @@ export function ApplicationFilters({
           }
         />
       </div>
-      <Select
-        value={filters.status}
-        onValueChange={(value) =>
-          onFiltersChange({ ...filters, status: value as ApplicationStatus | 'all' })
-        }
-      >
-        <SelectTrigger className="w-full sm:w-[180px]">
-          <SelectValue placeholder="Status" />
-        </SelectTrigger>
-        <SelectContent>
-          {STATUSES.map((status) => (
-            <SelectItem key={status.value} value={status.value}>
-              {status.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {!hideStatusFilter && (
+        <Select
+          value={filters.status}
+          onValueChange={(value) =>
+            onFiltersChange({ ...filters, status: value as ApplicationStatus | 'all' })
+          }
+        >
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            {STATUSES.map((status) => (
+              <SelectItem key={status.value} value={status.value}>
+                {status.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
       <Select
         value={filters.jobType}
         onValueChange={(value) =>
