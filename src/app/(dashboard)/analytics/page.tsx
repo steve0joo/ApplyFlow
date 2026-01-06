@@ -101,7 +101,7 @@ export default function AnalyticsPage() {
     try {
       const now = new Date()
       let dateFrom: string | undefined
-      let dateTo: string | undefined = now.toISOString()
+      const dateTo: string | undefined = now.toISOString()
 
       if (dateRange !== 'all') {
         const days = parseInt(dateRange)

@@ -10,10 +10,6 @@ function ExtensionAuthContent() {
   const [status, setStatus] = useState<'loading' | 'authenticating' | 'success' | 'error'>('loading')
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    handleAuth()
-  }, [])
-
   async function handleAuth() {
     const supabase = createClient()
 
@@ -85,6 +81,11 @@ function ExtensionAuthContent() {
       setStatus('success')
     }
   }
+
+  useEffect(() => {
+    handleAuth()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

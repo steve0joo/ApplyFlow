@@ -22,10 +22,6 @@ type PopupState =
 export default function Popup() {
   const [state, setState] = useState<PopupState>({ type: 'loading' })
 
-  useEffect(() => {
-    initialize()
-  }, [])
-
   async function initialize() {
     // Check authentication
     const authenticated = await isAuthenticated()
@@ -93,6 +89,11 @@ export default function Popup() {
 
     setState({ type: 'saved', job: state.job })
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initialization on mount
+    initialize()
+  }, [])
 
   return (
     <div className="w-80 bg-white">

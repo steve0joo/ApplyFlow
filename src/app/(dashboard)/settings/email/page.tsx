@@ -29,10 +29,6 @@ export default function EmailSettingsPage() {
   const [saving, setSaving] = useState(false)
   const [copied, setCopied] = useState<'address' | 'filter' | null>(null)
 
-  useEffect(() => {
-    loadSettings()
-  }, [])
-
   async function loadSettings() {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -87,6 +83,11 @@ export default function EmailSettingsPage() {
       { description: type === 'address' ? 'Email address copied to clipboard' : 'Filter string copied to clipboard' }
     )
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- initialization on mount
+    loadSettings()
+  }, [])
 
   const filterString = ATS_DOMAINS.join(' OR ')
 
