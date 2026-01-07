@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   Dialog,
   DialogContent,
@@ -73,11 +73,19 @@ export function ApplicationForm({
 }: ApplicationFormProps) {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<FormData>(() => getInitialFormData(application))
+  const lastApplicationId = useRef<string | null>(null)
 
-  // Reset form when application changes
-  if (open && application && formData.job_title !== application.job_title) {
-    setFormData(getInitialFormData(application))
-  }
+  // Reset form when dialog opens with a different application
+  useEffect(() => {
+    const currentId = application?.id ?? null
+    if (open && currentId !== lastApplicationId.current) {
+      setFormData(getInitialFormData(application))
+      lastApplicationId.current = currentId
+    }
+    if (!open) {
+      lastApplicationId.current = null
+    }
+  }, [open, application])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

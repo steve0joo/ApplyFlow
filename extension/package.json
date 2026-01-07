@@ -19,17 +19,27 @@
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
     "autoprefixer": "^10.4.17",
+    "canvas": "^3.2.0",
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
     "typescript": "^5.3.3"
   },
   "manifest": {
-    "permissions": ["storage", "activeTab", "tabs"],
+    "permissions": [
+      "storage",
+      "activeTab",
+      "tabs"
+    ],
     "host_permissions": [
-      "https://www.linkedin.com/*",
-      "https://boards.greenhouse.io/*",
-      "https://jobs.greenhouse.io/*",
-      "http://localhost:3000/*"
-    ]
+      "<all_urls>",
+      "http://localhost:3000/*",
+      "https://applyflow.space/*"
+    ],
+    "externally_connectable": {
+      "matches": [
+        "http://localhost:3000/*",
+        "https://applyflow.space/*"
+      ]
+    }
   }
 }

@@ -1,12 +1,18 @@
-import { useEffect, useState } from 'react'
-import { isAuthenticated } from '~lib/auth'
-import { checkDuplicate, createApplication, hashJobUrl, type ExtractedJob, type Application } from '~lib/api'
-import { LoginPrompt } from '~components/LoginPrompt'
-import { JobPreview } from '~components/JobPreview'
-import { SaveForm } from '~components/SaveForm'
-import { DuplicateAlert } from '~components/DuplicateAlert'
+import { useEffect, useState } from 'react';
+import { isAuthenticated } from '~lib/auth';
+import {
+  checkDuplicate,
+  createApplication,
+  hashJobUrl,
+  type ExtractedJob,
+  type Application,
+} from '~lib/api';
+import { LoginPrompt } from '~components/LoginPrompt';
+import { JobPreview } from '~components/JobPreview';
+import { SaveForm } from '~components/SaveForm';
+import { DuplicateAlert } from '~components/DuplicateAlert';
 
-import './style.css'
+import './style.css';
 
 type PopupState =
   | { type: 'loading' }
@@ -17,83 +23,97 @@ type PopupState =
   | { type: 'duplicate'; application: Application; job: ExtractedJob }
   | { type: 'saving' }
   | { type: 'saved'; job: ExtractedJob }
-  | { type: 'error'; message: string }
+  | { type: 'error'; message: string };
 
 export default function Popup() {
-  const [state, setState] = useState<PopupState>({ type: 'loading' })
+  const [state, setState] = useState<PopupState>({ type: 'loading' });
 
   async function initialize() {
     // Check authentication
-    const authenticated = await isAuthenticated()
+    const authenticated = await isAuthenticated();
     if (!authenticated) {
-      setState({ type: 'not_authenticated' })
-      return
+      setState({ type: 'not_authenticated' });
+      return;
     }
 
     // Get current tab
-    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true })
-    if (!tab?.url) {
-      setState({ type: 'not_job_page' })
-      return
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
+    if (!tab?.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) {
+      setState({ type: 'not_job_page' });
+      return;
     }
 
-    // Check if on a supported job page
-    const isJobPage =
-      tab.url.includes('linkedin.com/jobs/view/') ||
-      tab.url.includes('boards.greenhouse.io/') && tab.url.includes('/jobs/') ||
-      tab.url.includes('jobs.greenhouse.io/')
+    setState({ type: 'extracting' });
 
-    if (!isJobPage) {
-      setState({ type: 'not_job_page' })
-      return
-    }
-
-    setState({ type: 'extracting' })
-
-    // Request job data from content script
+    // Request job data from universal content script
     try {
-      const response = await chrome.tabs.sendMessage(tab.id!, { type: 'EXTRACT_JOB_DATA' })
+      const response = await chrome.tabs.sendMessage(tab.id!, {
+        type: 'EXTRACT_JOB_DATA',
+        options: { skipLLM: false }
+      });
 
       if (!response?.jobData) {
-        setState({ type: 'error', message: 'Could not extract job data from this page' })
-        return
+        // Not a job page or extraction failed
+        setState({
+          type: 'not_job_page',
+        });
+        return;
       }
 
-      const job = response.jobData as ExtractedJob
+      const job = response.jobData as ExtractedJob;
 
       // Check for duplicates
-      const urlHash = await hashJobUrl(job.jobUrl)
-      const duplicateCheck = await checkDuplicate(urlHash)
+      const urlHash = await hashJobUrl(job.jobUrl);
+      const duplicateCheck = await checkDuplicate(urlHash);
 
       if (duplicateCheck.exists && duplicateCheck.application) {
-        setState({ type: 'duplicate', application: duplicateCheck.application, job })
+        setState({
+          type: 'duplicate',
+          application: duplicateCheck.application,
+          job,
+        });
       } else {
-        setState({ type: 'job_found', job })
+        setState({ type: 'job_found', job });
       }
     } catch (error) {
-      setState({ type: 'error', message: 'Failed to extract job data. Try refreshing the page.' })
+      // Content script might not be injected yet
+      setState({
+        type: 'not_job_page',
+      });
     }
   }
 
-  async function handleSave(status: string, notes: string, dateApplied: string | null) {
-    if (state.type !== 'job_found') return
+  async function handleSave(
+    status: string,
+    notes: string,
+    dateApplied: string | null
+  ) {
+    if (state.type !== 'job_found') return;
 
-    setState({ type: 'saving' })
+    setState({ type: 'saving' });
 
-    const result = await createApplication(state.job, status, notes, dateApplied || undefined)
+    const result = await createApplication(
+      state.job,
+      status,
+      notes,
+      dateApplied || undefined
+    );
 
     if (result.error) {
-      setState({ type: 'error', message: result.error })
-      return
+      setState({ type: 'error', message: result.error });
+      return;
     }
 
-    setState({ type: 'saved', job: state.job })
+    setState({ type: 'saved', job: state.job });
   }
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- initialization on mount
-    initialize()
-  }, [])
+    initialize();
+  }, []);
 
   return (
     <div className="w-80 bg-white">
@@ -127,7 +147,9 @@ export default function Popup() {
                 d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               />
             </svg>
-            <p className="text-gray-600">Visit a job page on LinkedIn or Greenhouse to track it.</p>
+            <p className="text-gray-600">
+              Visit a job page on LinkedIn or Greenhouse to track it.
+            </p>
           </div>
         )}
 
@@ -205,5 +227,5 @@ export default function Popup() {
         )}
       </div>
     </div>
-  )
+  );
 }
